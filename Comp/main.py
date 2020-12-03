@@ -66,7 +66,7 @@ while(True):
                 location = location - movement 
                 print(location) 
                 isMoving = True
-        if x > hiBound and serialPort.in_waiting == 0:     
+        if x > hiBound and not isMoving:     
             # get movement   
             ratio = (x - hiBound) / (width - hiBound)                       # farther from hiBound, higher ratio
             movement = int(ratio * maxMovement)
