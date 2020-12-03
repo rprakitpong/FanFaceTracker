@@ -123,6 +123,9 @@ int main(void)
                 i = i + 1;
             }
             startStepping = FALSE;
+            while ((UCA0IFG & UCTXIFG) == 0)
+                ;
+            UCA0TXBUF = 0x01;
         }
     }
     return 0;
