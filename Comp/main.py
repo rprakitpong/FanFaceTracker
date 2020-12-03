@@ -1,38 +1,63 @@
 import numpy as np
 import cv2
 import os 
+import serial
 
 # set path to folder where python file is
 path = os.path.dirname(os.path.realpath(__file__))
 os.chdir(path)
 
+# set up camera
+width = 640
+height = 480
 cap = cv2.VideoCapture(1) # use usb camera, not laptop camera
-cap.set(3,640) # set Width
-cap.set(4,480) # set Height
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,width) # set Width
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,height) # set Height
+face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+
+# set up serial
+serialPort = serial.Serial(port = "COM6", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE)
+
+# set up parameters
+threshold = 0.2 # face has in center of image, with x percent threshold
+loBound = int(width / 2 - (width * threshold) / 2)
+hiBound = int(width / 2 + (width * threshold) / 2)
 
 while(True):
+    # get frame
     ret, frame = cap.read()
-    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-    eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
-    
+
+    # get faces
     img = frame
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-    for (x,y,w,h) in faces:
-        print(str(x) + ',' + str(y))
-        img = cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
-        roi_gray = gray[y:y+h, x:x+w]
-        roi_color = img[y:y+h, x:x+w]
-        eyes = eye_cascade.detectMultiScale(roi_gray)
-        for (ex,ey,ew,eh) in eyes:
-            cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
-    
-    cv2.imshow('frame', frame)
-    cv2.imshow('gray', gray)
 
+    # recolor frame to highlight threshold
+    ball = img[:, loBound:hiBound]
+    #ball = cv2.cvtColor(ball, cv2.COLOR_BGR2GRAY)
+    #ball = cv2.cvtColor(ball, cv2.COLOR_GRAY2BGR)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    img[:, loBound:hiBound] = ball
+
+    if len(faces) > 0:
+        (x,y,w,h) = faces[0] # only detect one face at a time
+        print(str(x) + ',' + str(y))
+
+        # draw faces
+        img = cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
+                
+    # show frame
+    cv2.imshow('frame', img)
+
+    # get out of loop
     k = cv2.waitKey(30) & 0xff
     if k == 27: # press 'ESC' to quit
         break
 
+# end camera
 cap.release()
 cv2.destroyAllWindows()
+
+# end serial
+serialPort.close()
