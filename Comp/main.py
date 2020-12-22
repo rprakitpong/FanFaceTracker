@@ -131,7 +131,7 @@ class Machine():
         self.serialPort = serial.Serial(port = "COM6", baudrate=9600, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE)
         # rack and pinion state variables
         self.maxMovement = int(255 / 2)
-        self.maxLoLocation = self.maxMovement * -7                                            # experimentally determined
+        self.maxLoLocation = self.maxMovement * -7                                            # experimentally confirmed
         self.maxHiLocation = self.maxMovement * 7
         self.location = 0
         self.isMoving = False
@@ -196,3 +196,5 @@ cv.end()
 machine.end()
 # end tkinter window
 app.end()
+
+
